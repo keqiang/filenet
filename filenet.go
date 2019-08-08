@@ -26,6 +26,25 @@ func DownloadFileAtURL(url, outputFilePath string) error {
 	return writeToFile(outputFilePath, resp.Body)
 }
 
+// DecompressFiles decompress files specified in a map. Each entry in the map is a mapping from file to decompress -> name after decompression
+func DecompressFiles(files2Decompress map[string]string, maxWorkerNumber int) {
+	// TODO implement actual worker logic
+	if maxWorkerNumber > 5 {
+		maxWorkerNumber = 5
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(files2Decompress))
+	for gzFile, unzippedFile := range files2Decompress {
+		go func(src, dst string) {
+			defer wg.Done()
+			log.Printf("Unzipping file '%v'\n", src)
+			GZipDecompress(src, dst)
+			log.Printf("Unzipped to file '%v'\n", dst)
+		}(gzFile, unzippedFile)
+	}
+	wg.Wait()
+}
+
 // GZipDecompress decompress a zipped file
 func GZipDecompress(compressedFilePath, outputFilePath string) error {
 	fi, err := os.Open(compressedFilePath) // open file as a file handler
