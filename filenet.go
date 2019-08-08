@@ -102,7 +102,7 @@ func startDownloadWorker(fileChannel chan string, fc FTPDownloadConfig, wg *sync
 }
 
 func handleDownload(fileName string, fc FTPDownloadConfig) {
-	fmt.Println("Downloading:", fileName)
+	log.Printf("Downloading file '%v'\n", fileName)
 
 	ftpURL := fmt.Sprintf("%v:%v", fc.URL, fc.Port)
 	c, err := ftp.Dial(ftpURL, ftp.DialWithTimeout(5*time.Second))
@@ -140,5 +140,6 @@ func handleDownload(fileName string, fc FTPDownloadConfig) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Downloaded:", fileName)
+
+	log.Printf("Downloaded file '%v'\n", fileName)
 }
