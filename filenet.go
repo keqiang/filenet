@@ -37,7 +37,10 @@ func DecompressFiles(files2Decompress map[string]string, maxWorkerNumber int) {
 	for gzFile, unzippedFile := range files2Decompress {
 		go func(src, dst string) {
 			defer wg.Done()
-			GZipDecompress(src, dst)
+			err := GZipDecompress(src, dst)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}(gzFile, unzippedFile)
 	}
 	wg.Wait()
