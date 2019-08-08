@@ -37,9 +37,7 @@ func DecompressFiles(files2Decompress map[string]string, maxWorkerNumber int) {
 	for gzFile, unzippedFile := range files2Decompress {
 		go func(src, dst string) {
 			defer wg.Done()
-			log.Printf("Unzipping file '%v'\n", src)
 			GZipDecompress(src, dst)
-			log.Printf("Unzipped to file '%v'\n", dst)
 		}(gzFile, unzippedFile)
 	}
 	wg.Wait()
@@ -47,6 +45,7 @@ func DecompressFiles(files2Decompress map[string]string, maxWorkerNumber int) {
 
 // GZipDecompress decompress a zipped file
 func GZipDecompress(compressedFilePath, outputFilePath string) error {
+	log.Printf("Decompressing file '%v'\n", filepath.Base(compressedFilePath))
 	fi, err := os.Open(compressedFilePath) // open file as a file handler
 	if err != nil {
 		return err
@@ -57,8 +56,12 @@ func GZipDecompress(compressedFilePath, outputFilePath string) error {
 		return err
 	}
 	defer fz.Close()
-
-	return writeToFile(outputFilePath, fz)
+	err = writeToFile(outputFilePath, fz)
+	if err != nil {
+		return err
+	}
+	log.Printf("Decompressed to file '%v'\n", filepath.Base(outputFilePath))
+	return nil
 }
 
 // reader from a Reader object and write to a file
@@ -121,7 +124,8 @@ func startDownloadWorker(fileChannel chan string, fc FTPDownloadConfig, wg *sync
 }
 
 func handleDownload(fileName string, fc FTPDownloadConfig) {
-	log.Printf("Downloading file '%v'\n", fileName)
+	baseFileName := filepath.Base(fileName) // strip path so this can be used as the name of output file
+	log.Printf("Downloading file '%v'\n", baseFileName)
 
 	ftpURL := fmt.Sprintf("%v:%v", fc.URL, fc.Port)
 	c, err := ftp.Dial(ftpURL, ftp.DialWithTimeout(5*time.Second))
@@ -149,7 +153,7 @@ func handleDownload(fileName string, fc FTPDownloadConfig) {
 	}
 	defer res.Close()
 
-	outFile, err := os.Create(filepath.Join(fc.DestDir, fileName))
+	outFile, err := os.Create(filepath.Join(fc.DestDir, baseFileName))
 	defer outFile.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -160,5 +164,5 @@ func handleDownload(fileName string, fc FTPDownloadConfig) {
 		log.Fatal(err)
 	}
 
-	log.Printf("Downloaded file '%v'\n", fileName)
+	log.Printf("Downloaded file '%v'\n", baseFileName)
 }
