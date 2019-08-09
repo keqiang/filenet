@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 	"time"
@@ -168,4 +169,13 @@ func handleDownload(fileName string, fc FTPDownloadConfig) {
 	}
 
 	log.Printf("Downloaded file '%v'\n", baseFileName)
+}
+
+// CheckBinaryExistence checks if the underlying OS has the binary in this user's PATH
+func CheckBinaryExistence(binaryFileName string) error {
+	_, err := exec.LookPath(binaryFileName) // check if the specified binary is installed in the system
+	if err != nil {
+		return fmt.Errorf("Can not locate binary file '%v' on your system; check if it's installed and is added to your PATH variable", binaryFileName)
+	}
+	return nil
 }
